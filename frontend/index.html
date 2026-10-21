@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AMMS | Academic Management & Enterprise Database Suite</title>
+  <meta name="description" content="Enterprise Academic Management & Attendance Monitoring System (AMMS) with integrated MySQL 8.0 InnoDB Database Studio.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- =========================================================================
+       0. STANDALONE INITIAL LOGIN GATEWAY SCREEN
+       Shown first when application starts. If unauthenticated, nothing else is displayed.
+       ========================================================================= -->
+  <div id="screenLoginGateway" class="login-gateway-screen">
+    <div class="login-ambient-glow"></div>
+
+    <div class="login-gateway-card">
+      <!-- Institute & Portal Branding Header -->
+      <div class="login-gateway-header">
+        <div class="login-crest-wrap">
+          <div class="institute-crest" style="width: 52px; height: 52px;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"></path>
+              <path d="M12 8v8"></path>
+              <path d="M8 12h8"></path>
+            </svg>
+          </div>
+        </div>
+        <div class="login-header-text">
+          <span class="login-institute-label">Government College of Engineering & Technology</span>
+          <h1 class="login-portal-title">AMMS Academic Portal</h1>
+          <p class="login-portal-subtitle">Sign in to your institutional account</p>
+        </div>
+      </div>
+
+      <!-- Clean Login Form -->
+      <form id="formGatewayLogin" class="login-manual-form" onsubmit="event.preventDefault(); submitGatewayLogin();">
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label" for="gatewayUsername">Username / PRN / Email</label>
+          <div class="input-with-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input type="text" id="gatewayUsername" class="form-control" placeholder="e.g. ram, aarav, pooja, namdev, or PRN / Email" required autocomplete="username">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" for="gatewayPassword">Access Password</label>
+          <div class="input-with-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" id="gatewayPassword" class="form-control" placeholder="Enter personal password (e.g. ram123, aarav123...)" required autocomplete="current-password">
+          </div>
+        </div>
+
+        <div id="gatewayLoginError" class="login-error-banner" style="display: none; margin-bottom: 16px;"></div>
+
+        <div class="login-submit-row">
+          <button type="submit" class="btn btn-primary login-submit-btn" id="btnGatewaySubmit">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            <span>Sign In to AMMS Portal</span>
+          </button>
+        </div>
+
+        <div style="margin-top: 20px; padding: 12px 14px; background: rgba(37, 99, 235, 0.08); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); text-align: center;">
+          <div style="display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.74rem; font-weight: 600; color: #60a5fa; margin-bottom: 2px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Enterprise Single-Sign-On & Role-Based Access Control</span>
+          </div>
+          <span style="font-size: 0.7rem; color: var(--text-muted);">Log in using your authorized Institutional Email, Username, or Student PRN</span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       AUTHENTICATED APPLICATION WORKSPACE
+       Hidden by default. Only visible when user successfully authenticates.
+       ========================================================================= -->
+  <div id="authenticatedApp" class="authenticated-app-wrap hidden">
+
+  <!-- 1. Institutional Official Topbar -->
+  <div class="institution-topbar">
+    <div class="topbar-container">
+      <div class="topbar-left">
+        <span class="gov-tag">Government Autonomous Engineering Institute</span>
+        <span class="topbar-divider"></span>
+        <span>Approved by AICTE • Affiliated to State Technological University • NBA Tier-1 Accredited</span>
+      </div>
+      <div class="topbar-right">
+        <span>AY: 2025–26 (Term I)</span>
+        <span class="topbar-divider"></span>
+        <div class="engine-telemetry-badge" id="engineStatusBadge" title="MySQL 8.0.36 InnoDB Connection Pool Active">
+          <span class="pulse-dot"></span>
+          <span>MySQL 8.0 InnoDB</span>
+          <span>• 127.0.0.1:3306 [amms]</span>
+        </div>
+        <span class="topbar-divider"></span>
+        <span id="systemClock">--:--:-- UTC</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Application Header & Identity Bar -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-section">
+        <!-- University Crest Vector Emblem -->
+        <div class="institute-crest">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"></path>
+            <path d="M12 8v8"></path>
+            <path d="M8 12h8"></path>
+          </svg>
+        </div>
+        <div class="brand-title-wrap">
+          <span class="institute-name">Government College of Engineering & Technology</span>
+          <h1 class="portal-title">
+            AMMS Enterprise Academic Suite
+            <span class="portal-version-badge">v2.4-PROD</span>
+          </h1>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Alerts Bell with Badge -->
+        <button class="btn-icon alert-bell-wrap" id="btnAlertsToggle" title="Automated Deficiency Early-Warning System">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span class="alert-count-pill" id="alertCountBadge">0</span>
+        </button>
+
+        <!-- Theme Toggle Button (Dark Mode / White Theme) -->
+        <button class="btn-icon theme-toggle-btn" id="btnThemeToggle" title="Toggle Theme (Dark Mode / White Theme)" aria-label="Toggle Theme">
+          <svg class="theme-icon-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="theme-icon-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+
+        <!-- User Identity Profile Display -->
+        <div class="user-identity-card" id="currentUserCard">
+          <div class="user-avatar-initials" id="userAvatar">HD</div>
+          <div class="user-details">
+            <span class="user-full-name" id="userNameLabel">Dr. Namdev Sawant</span>
+            <span class="user-role-label" id="userRoleTag">HOD (Computer Engineering)</span>
+          </div>
+        </div>
+
+        <!-- Sign Out Button -->
+        <button class="btn btn-danger-outline btn-sm" id="btnSignOutApp" title="Sign Out of AMMS Portal">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. Navigation Bar (Role-Based Dynamic Access) -->
+    <nav class="role-navigation-bar">
+      <div class="role-nav-inner">
+        <div class="nav-tabs" id="roleTabs">
+          <button class="nav-tab-btn active" data-role="HOD">
+            <span class="nav-tab-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v4M12 14v4M16 14v4"/></svg>
+            </span>
+            <span>Institutional Governance (HOD)</span>
+          </button>
+          <button class="nav-tab-btn" data-role="ADMIN_MANAGEMENT" id="tabAdminManagement">
+            <span class="nav-tab-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            </span>
+            <span>Academic Administration (Add/Manage)</span>
+          </button>
+          <button class="nav-tab-btn" data-role="COURSE_TEACHER">
+            <span class="nav-tab-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+            </span>
+            <span>Course Faculty & Lectures</span>
+          </button>
+          <button class="nav-tab-btn" data-role="TG">
+            <span class="nav-tab-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+            </span>
+            <span>Teacher Guardian (Mentorship)</span>
+          </button>
+          <button class="nav-tab-btn" data-role="CLASS_TEACHER">
+            <span class="nav-tab-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14h6"/><path d="M9 18h6"/><path d="M9 10h6"/></svg>
+            </span>
+            <span>Class Teacher (Cohort Matrix)</span>
+          </button>
+          <button class="nav-tab-btn" data-role="STUDENT">
+            <span class="nav-tab-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            </span>
+            <span>Student Academic Portal</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- 4. Early Warning Alerts Drawer -->
+  <aside class="alerts-drawer hidden" id="alertsDrawer">
+    <div class="drawer-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <h3 style="font-size: 0.92rem; font-weight: 700; color: #fff;">Attendance Early-Warning Alerts</h3>
+      </div>
+      <button class="modal-close-btn" id="btnCloseAlerts">&times;</button>
+    </div>
+    <div class="drawer-body" id="alertsDrawerContent">
+      <div style="color: var(--text-muted); font-size: 0.8rem;">Loading automated warnings...</div>
+    </div>
+  </aside>
+
+  <!-- 5. Main Content Workspace -->
+  <main class="main-container">
+
+    <!-- VIEW 1: HEAD OF DEPARTMENT (HOD) -->
+    <section class="workspace-view" id="viewHOD">
+      <div class="view-titlebar">
+        <div>
+          <h2 class="view-heading">Institutional Governance & Departmental Command</h2>
+          <p class="view-caption">Academic accreditation metrics, six-department parity matrix, and statutory compliance.</p>
+        </div>
+        <div class="view-actions-right">
+          <label for="deptSelect" style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">Academic Department:</label>
+          <select id="deptSelect" class="persona-dropdown"></select>
+        </div>
+      </div>
+
+      <div class="kpi-metric-grid">
+        <div class="kpi-card">
+          <span class="kpi-card-header">Department Average Attendance</span>
+          <span class="kpi-card-value text-emerald" id="hodDeptPct">--%</span>
+          <span class="kpi-card-footer" id="hodDeptNameLabel">Computer Engineering</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-card-header">Active Faculty Staff</span>
+          <span class="kpi-card-value" id="hodFacultyCount">--</span>
+          <span class="kpi-card-footer">Professors & Assistant Lecturers</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-card-header">Enrolled Undergraduates</span>
+          <span class="kpi-card-value" id="hodStudentsCount">--</span>
+          <span class="kpi-card-footer">Across FE to BE Academic Cohorts</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-card-header">Conducted Sessions</span>
+          <span class="kpi-card-value" id="hodConductedCount">--</span>
+          <span class="kpi-card-footer">Committed to MySQL InnoDB Engine</span>
+        </div>
+      </div>
+
+      <!-- 6 Departments Comparative Matrix -->
+      <div class="data-panel">
+        <div class="panel-header-bar">
+          <span class="panel-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+            Six Engineering Departments Accreditation Parity Matrix
+          </span>
+          <span class="status-pill pill-info">NBA Tier-1 Benchmark</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="allDepartmentsTable">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Academic Department</th>
+                <th>Head of Department</th>
+                <th>Faculty Staff</th>
+                <th>Active Courses</th>
+                <th>Students</th>
+                <th>Sessions</th>
+                <th>Average Attendance</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Department Courses Matrix -->
+      <div class="data-panel">
+        <div class="panel-header-bar">
+          <span class="panel-title">Curriculum Offerings & Faculty Load Performance</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="hodCoursesTable">
+            <thead>
+              <tr>
+                <th>Course Code</th>
+                <th>Course Title</th>
+                <th>Type</th>
+                <th>Lead Faculty Member</th>
+                <th>Conducted</th>
+                <th>Average Attendance</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Defaulter Register -->
+      <div class="data-panel">
+        <div class="panel-header-bar">
+          <span class="panel-title">Department Defaulter Register (&lt; 75.0% Statutory Threshold)</span>
+          <span class="status-pill pill-danger">Parental Warning Mandatory</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="hodDefaultersTable">
+            <thead>
+              <tr>
+                <th>Roll No</th>
+                <th>Cohort / Div</th>
+                <th>Student Candidate</th>
+                <th>Attendance %</th>
+                <th>Deficit Lectures</th>
+                <th>Academic Standing</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: COURSE TEACHER -->
+    <section class="workspace-view hidden" id="viewCourseTeacher">
+      <div class="view-titlebar">
+        <div>
+          <h2 class="view-heading">Course Teacher Lecture & Attendance Suite</h2>
+          <p class="view-caption">Atomic attendance marking, lecture rescheduling with collision detection, and faculty substitution.</p>
+        </div>
+        <div class="view-actions-right">
+          <button class="btn btn-primary" id="btnMarkLectureShortcut">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <span>Mark Scheduled Lecture</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="data-panel">
+        <div class="panel-header-bar">
+          <span class="panel-title">Allocated Course Workloads & Cohorts</span>
+          <span class="status-pill pill-info">AY 2025–26</span>
+        </div>
+        <div class="allocation-cards-grid" id="teacherAllocationsGrid"></div>
+      </div>
+
+      <div class="data-panel">
+        <div class="panel-header-bar">
+          <span class="panel-title">Lecture Schedules & Action Matrix</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="teacherSchedulesTable">
+            <thead>
+              <tr>
+                <th>Sched ID</th>
+                <th>Course</th>
+                <th>Division</th>
+                <th>Date</th>
+                <th>Time Slot</th>
+                <th>Room</th>
+                <th>Status</th>
+                <th>Substitute / Remarks</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: TEACHER GUARDIAN (TG) -->
+    <section class="workspace-view hidden" id="viewTG">
+      <div class="view-titlebar">
+        <div>
+          <h2 class="view-heading">Teacher Guardian (TG) Mentorship Suite</h2>
+          <p class="view-caption">Mentee cohort monitoring, chronic absence early-warning, and documented counseling records.</p>
+        </div>
+        <div class="view-actions-right">
+          <span class="status-pill pill-info" id="tgBatchTitle">Mentee Cohort Batch 1</span>
+        </div>
+      </div>
+
+      <div class="data-panel">
+        <div class="panel-header-bar">
+          <span class="panel-title">Assigned Mentee Student Roster</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="tgMenteesTable">
+            <thead>
+              <tr>
+                <th>Roll No</th>
+                <th>Student Candidate</th>
+                <th>Student Phone</th>
+                <th>Parent Contact</th>
+                <th>Total Sessions</th>
+                <th>Attended</th>
+                <th>Cumulative %</th>
+                <th>Defaulter Standing</th>
+                <th>Counseling Record</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: CLASS TEACHER -->
+    <section class="workspace-view hidden" id="viewClassTeacher">
+      <div class="view-titlebar">
+        <div>
+          <h2 class="view-heading">Class Teacher Cohort Dashboard</h2>
+          <p class="view-caption">Division-level macro performance, parity metrics, and critical defaulter registries.</p>
+        </div>
+        <div class="view-actions-right">
+          <span class="status-pill pill-info" id="classTeacherDivBadge">SE-COMP Div A</span>
+        </div>
+      </div>
+
+      <div class="kpi-metric-grid">
+        <div class="kpi-card">
+          <span class="kpi-card-header">Division Enrollment</span>
+          <span class="kpi-card-value" id="ctTotalStudents">--</span>
+          <span class="kpi-card-footer">Active engineering undergraduates</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-card-header">Division Average Attendance</span>
+          <span class="kpi-card-value text-emerald" id="ctDivisionAverage">--%</span>
+          <span class="kpi-card-footer">Classroom parity benchmark</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-card-header">Critical Defaulters (&lt; 75%)</span>
+          <span class="kpi-card-value text-rose" id="ctDefaulterCount">--</span>
+          <span class="kpi-card-footer">Barred from internal semester examinations</span>
+        </div>
+      </div>
+
+      <div class="data-panel">
+        <div class="panel-header-bar">
+          <span class="panel-title">Complete Division Student Attendance Roster</span>
+          <button class="btn btn-secondary btn-sm" id="btnExportDivisionCSV">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Export CSV</span>
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="classTeacherStudentsTable">
+            <thead>
+              <tr>
+                <th>Roll No</th>
+                <th>Student Candidate</th>
+                <th>PRN</th>
+                <th>Conducted</th>
+                <th>Attended</th>
+                <th>Attendance %</th>
+                <th>Health Status</th>
+                <th>Parent Phone</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 5: STUDENT PORTAL -->
+    <section class="workspace-view hidden" id="viewStudent">
+      <div class="view-titlebar">
+        <div>
+          <h2 class="view-heading">Student Academic Attendance Portal</h2>
+          <p class="view-caption">Personal session breakdown, statutory compliance gauges, and attendance logs.</p>
+        </div>
+        <div class="view-actions-right">
+          <span class="status-pill pill-info" id="studentHeaderBadge">SE-COMP • Div A</span>
+        </div>
+      </div>
+
+      <!-- Student View-Only Security Notice Banner -->
+      <div class="student-read-only-banner">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <path d="M12 8v4"></path>
+          <path d="M12 16h.01"></path>
+        </svg>
+        <div class="student-read-only-text">
+          <h4>Official Student Academic Record • Read-Only Authorized View</h4>
+          <p>Under institute governance, students have secure view-only access to their individual attendance history across all 5 enrolled courses. Database internals, SQL tools, and record modification authorities are strictly restricted to faculty members.</p>
+        </div>
+      </div>
+
+      <div class="kpi-metric-grid">
+        <div class="kpi-card">
+          <span class="kpi-card-header">Cumulative Attendance</span>
+          <div style="display: flex; justify-content: space-between; align-items: baseline;">
+            <span class="kpi-card-value" id="studentOverallPct">--%</span>
+            <span class="status-pill" id="studentStatusPill">--</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="studentProgressBar" style="width: 0%;"></div>
+          </div>
+          <span class="kpi-card-footer">Statutory Threshold: 75.0%</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-card-header">Conducted Sessions</span>
+          <span class="kpi-card-value" id="studentTotalConducted">0</span>
+          <span class="kpi-card-footer">Across all enrolled curriculum subjects</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-card-header">Attended Sessions</span>
+          <span class="kpi-card-value text-emerald" id="studentTotalAttended">0</span>
+          <span class="kpi-card-footer">Present & sanctioned leaves</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-card-header">Unexcused Absences</span>
+          <span class="kpi-card-value text-rose" id="studentTotalAbsent">0</span>
+          <span class="kpi-card-footer">Immediate mentor intervention if &gt; 5</span>
+        </div>
+      </div>
+
+      <div class="data-panel">
+        <div class="panel-header-bar">
+          <span class="panel-title">Subject-Wise Attendance Breakdown</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="studentCoursesTable">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Course Title</th>
+                <th>Credits</th>
+                <th>Conducted</th>
+                <th>Attended</th>
+                <th>Absent</th>
+                <th>Percentage</th>
+                <th>Academic Status</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="data-panel">
+        <div class="panel-header-bar">
+          <span class="panel-title">Recent Session Logs</span>
+          <span class="status-pill pill-neutral">Synchronized with MySQL</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="studentRecentLogsTable">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Slot</th>
+                <th>Course</th>
+                <th>Status</th>
+                <th>Recorded By Faculty</th>
+                <th>Topic / Remarks</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 6: ACADEMIC ADMINISTRATION (HOD & ADMIN EXCLUSIVE) -->
+    <section class="workspace-view hidden" id="viewAdminManagement">
+      <div class="view-titlebar">
+        <div>
+          <h2 class="view-heading">Academic Administration & Department Governance</h2>
+          <p class="view-caption">Official Head of Department (HOD) authority console: register students, appoint faculty, configure curriculum subjects, and assign teaching allocations.</p>
+        </div>
+        <div class="admin-tab-nav" style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <button class="admin-nav-pill active" id="btnPillStudents" onclick="switchAdminSection('students');">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            <span>Students (Add & Roster)</span>
+          </button>
+          <button class="admin-nav-pill" id="btnPillFaculty" onclick="switchAdminSection('faculty');">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span>Faculty (Add & Staff)</span>
+          </button>
+          <button class="admin-nav-pill" id="btnPillCourses" onclick="switchAdminSection('courses');">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span>Curriculum Subjects</span>
+          </button>
+          <button class="admin-nav-pill" id="btnPillAllocations" onclick="switchAdminSection('allocations');">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span>Course Allocations</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- SECTION 1: STUDENTS MANAGEMENT -->
+      <div class="admin-subpanel" id="adminPanelStudents">
+        <div class="admin-layout-grid" style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 20px;">
+          <!-- Form Card -->
+          <div class="data-panel admin-form-card">
+            <div class="panel-header-bar">
+              <span class="panel-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                Enroll New Student (HOD Only)
+              </span>
+              <span class="status-pill pill-info">HOD Exclusivity</span>
+            </div>
+            <form id="formAdminAddStudent" onsubmit="event.preventDefault(); submitAdminAddStudent();" style="padding: 16px 18px;">
+              <div class="form-row" style="display: flex; gap: 12px; margin-bottom: 12px;">
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newStdPrn">PRN *</label>
+                  <input type="text" id="newStdPrn" class="form-control" placeholder="e.g. PRN-2026-COMP-027" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newStdRoll">Roll Number *</label>
+                  <input type="number" id="newStdRoll" class="form-control" placeholder="e.g. 27" required min="1">
+                </div>
+              </div>
+              <div class="form-row" style="display: flex; gap: 12px; margin-bottom: 12px;">
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newStdFirstName">First Name *</label>
+                  <input type="text" id="newStdFirstName" class="form-control" placeholder="e.g. Harshada" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newStdLastName">Last Name *</label>
+                  <input type="text" id="newStdLastName" class="form-control" placeholder="e.g. Kadam" required>
+                </div>
+              </div>
+              <div class="form-row" style="display: flex; gap: 12px; margin-bottom: 12px;">
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newStdEmail">Institutional Email *</label>
+                  <input type="email" id="newStdEmail" class="form-control" placeholder="e.g. harshada.kadam@student.engg.edu" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newStdPhone">Phone Number</label>
+                  <input type="text" id="newStdPhone" class="form-control" placeholder="e.g. 9876543299">
+                </div>
+              </div>
+              <div class="form-row" style="display: flex; gap: 12px; margin-bottom: 14px;">
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newStdDivision">Class & Division *</label>
+                  <select id="newStdDivision" class="form-control" required></select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newStdPassword">Access Password</label>
+                  <input type="password" id="newStdPassword" class="form-control" placeholder="Auto: <firstname>123">
+                </div>
+              </div>
+              <div style="display: flex; justify-content: flex-end;">
+                <button type="submit" class="btn btn-primary" id="btnAdminSaveStudent">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span>Enroll Student</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Roster Table Card -->
+          <div class="data-panel admin-table-card">
+            <div class="panel-header-bar">
+              <span class="panel-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Enrolled Students Directory
+              </span>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="text" id="adminStudentSearch" class="form-control" placeholder="Search by name/PRN..." style="padding: 4px 10px; font-size: 0.76rem; width: 180px;" oninput="filterAdminStudents();">
+                <button class="btn btn-secondary btn-sm" onclick="loadAdminStudents();" title="Refresh">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="table-responsive" style="max-height: 440px; overflow-y: auto;">
+              <table class="data-table" id="adminStudentsTable">
+                <thead>
+                  <tr>
+                    <th>Roll No</th>
+                    <th>PRN</th>
+                    <th>Student Candidate</th>
+                    <th>Division</th>
+                    <th>Email</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="adminStudentsTbody">
+                  <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">Loading students...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: FACULTY MANAGEMENT -->
+      <div class="admin-subpanel hidden" id="adminPanelFaculty">
+        <div class="admin-layout-grid" style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 20px;">
+          <!-- Form Card -->
+          <div class="data-panel admin-form-card">
+            <div class="panel-header-bar">
+              <span class="panel-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                Appoint New Faculty Member (HOD Only)
+              </span>
+              <span class="status-pill pill-info">HOD Exclusivity</span>
+            </div>
+            <form id="formAdminAddFaculty" onsubmit="event.preventDefault(); submitAdminAddFaculty();" style="padding: 16px 18px;">
+              <div class="form-row" style="display: flex; gap: 12px; margin-bottom: 12px;">
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newFacCode">Employee Code *</label>
+                  <input type="text" id="newFacCode" class="form-control" placeholder="e.g. EMP-COMP-016" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newFacDept">Department *</label>
+                  <select id="newFacDept" class="form-control" required></select>
+                </div>
+              </div>
+              <div class="form-row" style="display: flex; gap: 12px; margin-bottom: 12px;">
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newFacFirstName">First Name *</label>
+                  <input type="text" id="newFacFirstName" class="form-control" placeholder="e.g. Rajesh" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newFacLastName">Last Name *</label>
+                  <input type="text" id="newFacLastName" class="form-control" placeholder="e.g. Kulkarni" required>
+                </div>
+              </div>
+              <div class="form-row" style="display: flex; gap: 12px; margin-bottom: 12px;">
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newFacEmail">Institutional Email *</label>
+                  <input type="email" id="newFacEmail" class="form-control" placeholder="e.g. rajesh.kulkarni@engg-institute.edu" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newFacPhone">Phone Number</label>
+                  <input type="text" id="newFacPhone" class="form-control" placeholder="e.g. 9876500016">
+                </div>
+              </div>
+              <div class="form-row" style="display: flex; gap: 12px; margin-bottom: 14px;">
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newFacDesignation">Designation *</label>
+                  <select id="newFacDesignation" class="form-control" required>
+                    <option value="Assistant Professor">Assistant Professor</option>
+                    <option value="Associate Professor">Associate Professor</option>
+                    <option value="Professor">Professor</option>
+                    <option value="HOD">Head of Department (HOD)</option>
+                  </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newFacPassword">Access Password</label>
+                  <input type="password" id="newFacPassword" class="form-control" placeholder="Auto: <firstname>123">
+                </div>
+              </div>
+              <div style="display: flex; justify-content: flex-end;">
+                <button type="submit" class="btn btn-primary" id="btnAdminSaveFaculty">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span>Appoint Faculty</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Faculty Directory Card -->
+          <div class="data-panel admin-table-card">
+            <div class="panel-header-bar">
+              <span class="panel-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Faculty Staff Directory
+              </span>
+              <button class="btn btn-secondary btn-sm" onclick="loadAdminFaculty();" title="Refresh">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              </button>
+            </div>
+            <div class="table-responsive" style="max-height: 440px; overflow-y: auto;">
+              <table class="data-table" id="adminFacultyTable">
+                <thead>
+                  <tr>
+                    <th>Emp Code</th>
+                    <th>Faculty Name</th>
+                    <th>Designation</th>
+                    <th>Department</th>
+                    <th>Email</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="adminFacultyTbody">
+                  <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">Loading faculty staff...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 3: CURRICULUM SUBJECTS -->
+      <div class="admin-subpanel hidden" id="adminPanelCourses">
+        <div class="admin-layout-grid" style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 20px;">
+          <!-- Form Card -->
+          <div class="data-panel admin-form-card">
+            <div class="panel-header-bar">
+              <span class="panel-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                Add Subject to Curriculum (HOD Only)
+              </span>
+              <span class="status-pill pill-info">HOD Exclusivity</span>
+            </div>
+            <form id="formAdminAddCourse" onsubmit="event.preventDefault(); submitAdminAddCourse();" style="padding: 16px 18px;">
+              <div class="form-row" style="display: flex; gap: 12px; margin-bottom: 12px;">
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newCourseCode">Course Code *</label>
+                  <input type="text" id="newCourseCode" class="form-control" placeholder="e.g. CS306" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newCourseDept">Department *</label>
+                  <select id="newCourseDept" class="form-control" required></select>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label class="form-label" for="newCourseName">Course Title *</label>
+                <input type="text" id="newCourseName" class="form-control" placeholder="e.g. Cloud Computing & Distributed Architecture" required>
+              </div>
+              <div class="form-row" style="display: flex; gap: 12px; margin-bottom: 14px;">
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newCourseSemester">Semester *</label>
+                  <select id="newCourseSemester" class="form-control" required>
+                    <option value="1">Sem 1 (FE)</option>
+                    <option value="2">Sem 2 (FE)</option>
+                    <option value="3">Sem 3 (SE)</option>
+                    <option value="4">Sem 4 (SE)</option>
+                    <option value="5" selected>Sem 5 (TE)</option>
+                    <option value="6">Sem 6 (TE)</option>
+                    <option value="7">Sem 7 (BE)</option>
+                    <option value="8">Sem 8 (BE)</option>
+                  </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newCourseType">Type *</label>
+                  <select id="newCourseType" class="form-control" required>
+                    <option value="THEORY">THEORY</option>
+                    <option value="LAB">LABORATORY</option>
+                    <option value="TUTORIAL">TUTORIAL</option>
+                  </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                  <label class="form-label" for="newCourseCredits">Credits</label>
+                  <input type="number" step="0.5" id="newCourseCredits" class="form-control" value="4.0" required>
+                </div>
+              </div>
+              <div style="display: flex; justify-content: flex-end;">
+                <button type="submit" class="btn btn-primary" id="btnAdminSaveCourse">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span>Add Subject</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Courses Table Card -->
+          <div class="data-panel admin-table-card">
+            <div class="panel-header-bar">
+              <span class="panel-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                Active Curriculum Offerings
+              </span>
+              <button class="btn btn-secondary btn-sm" onclick="loadAdminCourses();" title="Refresh">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              </button>
+            </div>
+            <div class="table-responsive" style="max-height: 440px; overflow-y: auto;">
+              <table class="data-table" id="adminCoursesTable">
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>Course Title</th>
+                    <th>Department</th>
+                    <th>Sem</th>
+                    <th>Type</th>
+                    <th>Credits</th>
+                  </tr>
+                </thead>
+                <tbody id="adminCoursesTbody">
+                  <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">Loading curriculum subjects...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 4: COURSE ALLOCATIONS -->
+      <div class="admin-subpanel hidden" id="adminPanelAllocations">
+        <div class="admin-layout-grid" style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 20px;">
+          <!-- Form Card -->
+          <div class="data-panel admin-form-card">
+            <div class="panel-header-bar">
+              <span class="panel-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Assign Course Teaching Load (HOD Only)
+              </span>
+              <span class="status-pill pill-info">HOD Exclusivity</span>
+            </div>
+            <form id="formAdminAddAllocation" onsubmit="event.preventDefault(); submitAdminAddAllocation();" style="padding: 16px 18px;">
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label class="form-label" for="newAllocCourse">Subject / Course *</label>
+                <select id="newAllocCourse" class="form-control" required></select>
+              </div>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label class="form-label" for="newAllocFaculty">Faculty Instructor *</label>
+                <select id="newAllocFaculty" class="form-control" required></select>
+              </div>
+              <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label" for="newAllocDivision">Target Class & Division *</label>
+                <select id="newAllocDivision" class="form-control" required></select>
+              </div>
+              <div style="display: flex; justify-content: flex-end;">
+                <button type="submit" class="btn btn-primary" id="btnAdminSaveAllocation">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span>Assign Allocation</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Allocations Table Card -->
+          <div class="data-panel admin-table-card">
+            <div class="panel-header-bar">
+              <span class="panel-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Active Teaching Allocations
+              </span>
+              <button class="btn btn-secondary btn-sm" onclick="loadAdminAllocations();" title="Refresh">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              </button>
+            </div>
+            <div class="table-responsive" style="max-height: 440px; overflow-y: auto;">
+              <table class="data-table" id="adminAllocationsTable">
+                <thead>
+                  <tr>
+                    <th>Course</th>
+                    <th>Faculty Instructor</th>
+                    <th>Division</th>
+                    <th>Dept</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="adminAllocationsTbody">
+                  <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">Loading allocations...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: ATOMIC ATTENDANCE MARKING MODAL -->
+  <div class="modal-overlay hidden" id="modalAttendanceMarking">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header-bar">
+        <div>
+          <h3 class="modal-title" id="markModalTitle">Conduct Lecture Session & Record Attendance</h3>
+          <p class="modal-subtitle" id="markModalSubtitle">CS301 Database Systems • Div A</p>
+        </div>
+        <button class="modal-close-btn" id="btnCloseMarkModal">&times;</button>
+      </div>
+
+      <div class="modal-body-content">
+        <div class="form-row" style="margin-bottom: 14px;">
+          <div class="form-group" style="flex: 2;">
+            <label class="form-label" for="inputTopicCovered">Topic Covered / Laboratory Experiment:</label>
+            <input type="text" id="inputTopicCovered" class="form-control" placeholder="e.g., Relational Algebra Operators & Query Execution Plans">
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label class="form-label">Bulk Mark:</label>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn btn-secondary btn-sm" id="btnMarkAllPresent">All Present</button>
+              <button type="button" class="btn btn-secondary btn-sm" id="btnMarkAllAbsent">All Absent</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="background-color: rgba(37, 99, 235, 0.08); border: 1px solid var(--primary-border); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 0.78rem; color: #93c5fd; display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span><strong>MySQL InnoDB ACID Transaction:</strong> Executes atomically with <code>SELECT ... FOR UPDATE</code> row lock and updates schedule state to <code>CONDUCTED</code>.</span>
+        </div>
+
+        <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+          <table class="data-table" id="markingRosterTable">
+            <thead>
+              <tr>
+                <th width="80">Roll No</th>
+                <th>Student Candidate</th>
+                <th>PRN</th>
+                <th width="320">Attendance Status</th>
+              </tr>
+            </thead>
+            <tbody id="markingRosterTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="modal-footer-bar">
+        <button class="btn btn-secondary" id="btnCancelMarking">Cancel</button>
+        <button class="btn btn-primary" id="btnSubmitAttendanceTransaction">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span>Commit Attendance (START TRANSACTION...COMMIT)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ATTENDANCE RECORD OVERRIDE (WITH AUDIT REASON) -->
+  <div class="modal-overlay hidden" id="modalCorrection">
+    <div class="modal-dialog">
+      <div class="modal-header-bar">
+        <div>
+          <h3 class="modal-title">Attendance Record Regulatory Override</h3>
+          <p class="modal-subtitle">Mandatory compliance reason logged to audit trail</p>
+        </div>
+        <button class="modal-close-btn" id="btnCloseCorrectionModal">&times;</button>
+      </div>
+      <div class="modal-body-content">
+        <input type="hidden" id="corrAttendanceId">
+        <div class="form-group">
+          <label class="form-label">Student Candidate:</label>
+          <div class="form-control" id="corrStudentName" style="background-color: var(--bg-surface-elevated);">--</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Original Status:</label>
+            <div class="form-control form-control-mono" id="corrOriginalStatus" style="background-color: var(--bg-surface-elevated);">--</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="corrNewStatus">Updated Status:</label>
+            <select id="corrNewStatus" class="form-control">
+              <option value="PRESENT">PRESENT</option>
+              <option value="ABSENT">ABSENT</option>
+              <option value="LATE">LATE</option>
+              <option value="EXCUSED">EXCUSED (Medical / Duty Leave)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="corrReason">Mandatory Regulatory Justification (Min 5 chars):</label>
+          <textarea id="corrReason" class="form-control" rows="3" placeholder="Provide official justification (e.g., Medical certificate verified, sports duty approved, bus transport breakdown)..."></textarea>
+          <p class="field-help-text">Captured in <code>attendance_audit_trail</code> with operator identity, IP, and timestamp.</p>
+        </div>
+      </div>
+      <div class="modal-footer-bar">
+        <button class="btn btn-secondary" id="btnCancelCorrection">Cancel</button>
+        <button class="btn btn-primary" id="btnSaveCorrection">Save with Audit Trail</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: RESCHEDULE LECTURE -->
+  <div class="modal-overlay hidden" id="modalReschedule">
+    <div class="modal-dialog">
+      <div class="modal-header-bar">
+        <div>
+          <h3 class="modal-title">Reschedule Lecture Slot</h3>
+          <p class="modal-subtitle">Collision-checked slot reassignment</p>
+        </div>
+        <button class="modal-close-btn" id="btnCloseRescheduleModal">&times;</button>
+      </div>
+      <div class="modal-body-content">
+        <input type="hidden" id="reschedScheduleId">
+        <div class="form-group">
+          <label class="form-label" for="reschedNewDate">Rescheduled Lecture Date:</label>
+          <input type="date" id="reschedNewDate" class="form-control">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="reschedNewSlot">New Slot Number:</label>
+            <select id="reschedNewSlot" class="form-control">
+              <option value="1">Slot 1 (09:00 - 10:00)</option>
+              <option value="2">Slot 2 (10:00 - 11:00)</option>
+              <option value="3">Slot 3 (11:15 - 12:15)</option>
+              <option value="4">Slot 4 (12:15 - 13:15)</option>
+              <option value="5">Slot 5 (14:00 - 15:00)</option>
+              <option value="6">Slot 6 (15:00 - 16:00)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="reschedNewRoom">Classroom / Lab:</label>
+            <input type="text" id="reschedNewRoom" class="form-control" value="Room A-301">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reschedReason">Administrative Reason:</label>
+          <input type="text" id="reschedReason" class="form-control" placeholder="e.g. Institute seminar overlap / Faculty duty">
+        </div>
+      </div>
+      <div class="modal-footer-bar">
+        <button class="btn btn-secondary" id="btnCancelReschedule">Cancel</button>
+        <button class="btn btn-primary" id="btnConfirmReschedule">Confirm Reschedule</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: FACULTY SUBSTITUTION -->
+  <div class="modal-overlay hidden" id="modalSubstitute">
+    <div class="modal-dialog">
+      <div class="modal-header-bar">
+        <div>
+          <h3 class="modal-title">Authorized Faculty Substitution</h3>
+          <p class="modal-subtitle">Row-level locking via SELECT ... FOR UPDATE</p>
+        </div>
+        <button class="modal-close-btn" id="btnCloseSubstituteModal">&times;</button>
+      </div>
+      <div class="modal-body-content">
+        <input type="hidden" id="substScheduleId">
+        <div class="form-group">
+          <label class="form-label" for="substFacultySelect">Substitute Faculty Member:</label>
+          <select id="substFacultySelect" class="form-control"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="substReason">Delegation Reason:</label>
+          <input type="text" id="substReason" class="form-control" placeholder="e.g. Primary teacher on authorized academic leave">
+        </div>
+      </div>
+      <div class="modal-footer-bar">
+        <button class="btn btn-secondary" id="btnCancelSubstitute">Cancel</button>
+        <button class="btn btn-primary" id="btnConfirmSubstitute">Assign Substitute</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: TG COUNSELING -->
+  <div class="modal-overlay hidden" id="modalCounseling">
+    <div class="modal-dialog">
+      <div class="modal-header-bar">
+        <div>
+          <h3 class="modal-title">Academic Counseling & Mentorship Record</h3>
+          <p class="modal-subtitle">Documented student intervention notes</p>
+        </div>
+        <button class="modal-close-btn" id="btnCloseCounselingModal">&times;</button>
+      </div>
+      <div class="modal-body-content">
+        <input type="hidden" id="counselingStudentId">
+        <div class="form-group">
+          <label class="form-label">Mentee Student Candidate:</label>
+          <div class="form-control" id="counselingStudentName" style="background-color: var(--bg-surface-elevated);">--</div>
+        </div>
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.8rem; color: var(--text-primary);">
+            <input type="checkbox" id="counselingFlagCheck">
+            <span><strong>Active Counseling Vigilance Flag</strong> (Notifies Class Teacher & HOD)</span>
+          </label>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="counselingNotes">Counseling Notes & Remedial Plan:</label>
+          <textarea id="counselingNotes" class="form-control" rows="4" placeholder="Record parent discussions, reasons for absenteeism, remedial measures..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer-bar">
+        <button class="btn btn-secondary" id="btnCancelCounseling">Cancel</button>
+        <button class="btn btn-primary" id="btnSaveCounseling">Save Counseling Record</button>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- MODAL: ROLE AUTHENTICATION & LOGIN -->
+  <div class="modal-overlay hidden" id="modalAuthentication">
+    <div class="modal-dialog modal-md" style="max-width: 620px;">
+      <div class="modal-header-bar">
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="institute-crest" style="width: 28px; height: 28px; font-size: 14px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"></path></svg>
+            </div>
+            <h3 class="modal-title">Institutional Role Authentication</h3>
+          </div>
+          <p class="modal-subtitle">AMMS Portal • 5 Distinct Access Levels (Student, Subject Teacher, TG, HOD, Faculty)</p>
+        </div>
+        <button class="modal-close-btn" id="btnCloseLoginModal">&times;</button>
+      </div>
+      <div class="modal-body-content">
+        <form id="formLoginAuth" onsubmit="event.preventDefault(); submitLoginAuth();">
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" for="loginUsername">Username / Institutional Email / PRN</label>
+            <input type="text" id="loginUsername" class="form-control" placeholder="Enter username, PRN, or email" required autocomplete="username">
+          </div>
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label" for="loginPassword">Access Password</label>
+            <input type="password" id="loginPassword" class="form-control" placeholder="Enter personal access password" required autocomplete="current-password">
+          </div>
+          <div id="loginAuthError" class="login-error-banner" style="display: none;"></div>
+        </form>
+      </div>
+      <div class="modal-footer-bar">
+        <button class="btn btn-secondary" id="btnCancelLoginModal">Cancel</button>
+        <button class="btn btn-primary" id="btnSubmitLoginAuth">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          <span>Sign In to AMMS</span>
+        </button>
+      </div>
+    </div> <!-- /modal-dialog -->
+  </div> <!-- /#modalAuthentication -->
+
+  </div> <!-- /#authenticatedApp -->
+
+  <!-- System Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
